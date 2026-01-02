@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown Contact - Online Safety Interactive Story</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Spline+Sans+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #151b2e;
+            --bg-chat: #1a2332;
+            --text-primary: #e8edf4;
+            --text-secondary: #8b95a8;
+            --accent-safe: #4ade80;
+            --accent-warning: #fbbf24;
+            --accent-danger: #ef4444;
+            --bubble-user: #2563eb;
+            --bubble-stranger: #374151;
+            --glow-safe: rgba(74, 222, 128, 0.3);
+            --glow-warning: rgba(251, 191, 36, 0.3);
+            --glow-danger: rgba(239, 68, 68, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            width: 960px;
+            height: 540px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: -0.01em;
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'Spline Sans Mono', monospace;
+        }
+
+        /* Safety Meter */
+        .safety-meter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meter-label {
+            font-family: 'Spline Sans Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .meter-bar {
+            width: 120px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--accent-safe);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px var(--glow-safe);
+        }
+
+        .meter-score {
+            font-family: 'Spline Sans Mono', monospace;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--bg-chat);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        /* Message Bubbles */
+        .message {
+            display: flex;
+            gap: 12px;
+            opacity: 0;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            max-width: 65%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .message.stranger .message-bubble {
+            background: var(--bubble-stranger);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-bubble {
+            background: var(--bubble-user);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.suspicious .message-bubble {
+            animation: glitch 0.3s ease-in-out;
+            border: 1px solid var(--accent-warning);
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .timestamp {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-family: 'Spline Sans Mono', monospace;
+        }
+
+        /* Choices */
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+            opacity: 0;
+            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+            padding: 14px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .choice-btn:hover::before {
+            left: 100%;
+        }
+
+        .choice-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(4px);
+        }
+
+        .choice-btn.safe {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .choice-btn.safe:hover {
+            background: rgba(74, 222, 128, 0.15);
+            border-color: var(--accent-safe);
+        }
+
+        .choice-btn.warning {
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .choice-btn.warning:hover {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: var(--accent-warning);
+        }
+
+        .choice-btn.danger {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .choice-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--accent-danger);
+        }
+
+        /* Feedback */
+        .feedback {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--accent-safe);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            opacity: 0;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .feedback.warning {
+            border-left-color: var(--accent-warning);
+            background: rgba(251, 191, 36, 0.08);
+        }
+
+        .feedback.danger {
+            border-left-color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Spline Sans Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .feedback-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .start-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .start-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 600px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-info {
+            margin-top: 32px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            max-width: 500px;
+        }
+
+        /* End Screen */
+        .end-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .end-screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .end-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .final-score {
+            font-size: 72px;
+            font-weight: 700;
+            font-family: 'Spline Sans Mono', monospace;
+            margin: 24px 0;
+        }
+
+        .score-label {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-family: 'Spline Sans Mono', monospace;
+        }
+
+        .end-message {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 24px 0;
+            line-height: 1.6;
+        }
+
+        .key-learnings {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            max-width: 700px;
+            text-align: left;
+        }
+
+        .key-learnings h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            font-family: 'Spline Sans Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .key-learnings ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .key-learnings li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .key-learnings li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent-safe);
+            font-weight: 700;
+        }
+
+        .restart-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+            padding: 14px 32px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            margin-top: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .restart-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .continue-btn {
+            background: rgba(74, 222, 128, 0.15);
+            border: 1px solid var(--accent-safe);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            margin-top: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .continue-btn:hover {
+            background: rgba(74, 222, 128, 0.25);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+        <h1 class="start-title">Unknown Contact</h1>
+        <p class="start-subtitle">An interactive experience about online safety and digital awareness</p>
+        <button class="start-btn" onclick="startStory()">Begin Experience</button>
+        <div class="start-info">
+            You'll navigate conversations with a stranger online. Make smart decisions to protect yourself from impersonation, image abuse, and grooming tactics. Your safety score depends on your choices.
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="contact-info">
+                <div class="avatar">?</div>
+                <div>
+                    <div class="contact-name" id="contactName">Unknown</div>
+                    <div class="status" id="contactStatus">online</div>
+                </div>
+            </div>
+            <div class="safety-meter">
+                <span class="meter-label">Safety</span>
+                <div class="meter-bar">
+                    <div class="meter-fill" id="meterFill" style="width: 100%"></div>
+                </div>
+                <span class="meter-score" id="meterScore">100</span>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea"></div>
+    </div>
+
+    <!-- End Screen -->
+    <div class="end-screen" id="endScreen">
+        <h2 class="end-title">Experience Complete</h2>
+        <div class="score-label">Final Safety Score</div>
+        <div class="final-score" id="finalScore">100</div>
+        <div class="end-message" id="endMessage"></div>
+        <div class="key-learnings">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li>Always verify someone's identity before sharing personal information</li>
+                <li>Be skeptical of AI-generated images - they can be highly convincing deepfakes</li>
+                <li>Watch for grooming tactics: building trust quickly, requesting personal details, pushing boundaries</li>
+                <li>Never share sensitive images or information with strangers online</li>
+                <li>Block and report suspicious accounts immediately</li>
+                <li>Trust your instincts - if something feels wrong, it probably is</li>
+            </ul>
+        </div>
+        <button class="restart-btn" onclick="location.reload()">Restart Experience</button>
+    </div>
+
+    <script>
+        // Story Data
+        let safetyScore = 100;
+        let currentNode = 'start';
+        let storyProgress = 0;
+
+        const storyNodes = {
+            start: {
+                messages: [
+                    { sender: 'stranger', text: "Hey! I saw your profile and thought we might have some mutual friends 😊", suspicious: false }
+                ],
+                choices: [
+                    { text: "Hi! Who are you exactly?", next: 'identity_check', safe: true, score: 0 },
+                    { text: "Oh really? Who do we both know?", next: 'mutual_friend', safe: true, score: 0 },
+                    { text: "Cool! Tell me about yourself!", next: 'eager_response', safe: false, score: -10 }
+                ]
+            },
+            identity_check: {
+                messages: [
+                    { sender: 'user', text: "Hi! Who are you exactly?" },
+                    { sender: 'stranger', text: "I'm Alex! I go to Central High. Pretty sure we have mutual friends from the drama club.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Good Start',
+                    text: 'Always verify who you\'re talking to before engaging further. Asking for identification is a smart first step.'
+                },
+                choices: [
+                    { text: "I don't go to Central High. How do you know me?", next: 'challenge_claim', safe: true, score: 10 },
+                    { text: "Cool! What shows have you been in?", next: 'small_talk', safe: false, score: -5 }
+                ]
+            },
+            mutual_friend: {
+                messages: [
+                    { sender: 'user', text: "Oh really? Who do we both know?" },
+                    { sender: 'stranger', text: "Sarah Chen and Mike Rodriguez. We all hung out at the mall last summer.", suspicious: false }
+                ],
+                choices: [
+                    { text: "I don't know anyone by those names.", next: 'caught_lying', safe: true, score: 15 },
+                    { text: "Oh yeah! How are they?", next: 'play_along', safe: false, score: -15 }
+                ]
+            },
+            eager_response: {
+                messages: [
+                    { sender: 'user', text: "Cool! Tell me about yourself!" },
+                    { sender: 'stranger', text: "Well, I'm 16, into gaming and photography. I actually think I recognize you from somewhere. What school do you go to?", suspicious: true }
+                ],
+                feedback: {
+                    type: 'warning',
+                    title: '⚠ Too Trusting',
+                    text: 'Sharing enthusiasm without verifying identity first can encourage strangers to ask for more personal information.'
+                },
+                choices: [
+                    { text: "Wait, how do I know you're really 16?", next: 'age_verification', safe: true, score: 5 },
+                    { text: "I go to Riverside Academy", next: 'shared_location', safe: false, score: -10 }
+                ]
+            },
+            challenge_claim: {
+                messages: [
+                    { sender: 'user', text: "I don't go to Central High. How do you know me?" },
+                    { sender: 'stranger', text: "Oh my bad! I must have mixed you up with someone else. But I've seen your posts and you seem really cool. Want to be friends?", suspicious: true }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Excellent!',
+                    text: 'You caught them in a lie! This is a red flag. Someone who lies about knowing you may have ulterior motives.'
+                },
+                choices: [
+                    { text: "This is suspicious. I'm blocking you.", next: 'early_block', safe: true, score: 20 },
+                    { text: "Maybe. What posts did you see?", next: 'curiosity_trap', safe: false, score: -5 }
+                ]
+            },
+            caught_lying: {
+                messages: [
+                    { sender: 'user', text: "I don't know anyone by those names." },
+                    { sender: 'stranger', text: "Oh really? My mistake then. But hey, we could still chat. You seem interesting!", suspicious: true }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Smart Move!',
+                    text: 'Catching someone in a lie about mutual friends is a major red flag for catfishing or impersonation.'
+                },
+                choices: [
+                    { text: "No thanks, this is weird. Blocking you.", next: 'early_block', safe: true, score: 20 },
+                    { text: "How do you know I'm interesting?", next: 'flattery_trap', safe: false, score: -10 }
+                ]
+            },
+            play_along: {
+                messages: [
+                    { sender: 'user', text: "Oh yeah! How are they?" },
+                    { sender: 'stranger', text: "They're good! Actually, Sarah mentioned you post amazing photos. Do you have Instagram? I'd love to follow you there.", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Dangerous Assumption',
+                    text: 'You just confirmed fake information without verification. Now they\'re trying to connect on other platforms to gather more data about you.'
+                },
+                choices: [
+                    { text: "Wait, I need to verify this. Blocking you.", next: 'late_block', safe: true, score: 5 },
+                    { text: "Sure! It's @[yourusername]", next: 'shared_social', safe: false, score: -20 }
+                ]
+            },
+            early_block: {
+                messages: [
+                    { sender: 'user', text: "This is suspicious. I'm blocking you." },
+                    { sender: 'system', text: "You blocked this contact and reported them for suspicious behavior.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Perfect Response!',
+                    text: 'You identified red flags early and took immediate action. Blocking and reporting suspicious accounts protects you and others.'
+                },
+                choices: [
+                    { text: "Continue to learn more", next: 'scenario_2_intro', safe: true, score: 0 }
+                ]
+            },
+            late_block: {
+                messages: [
+                    { sender: 'user', text: "Wait, I need to verify this. Blocking you." },
+                    { sender: 'system', text: "You blocked this contact. Better late than never!", suspicious: false }
+                ],
+                feedback: {
+                    type: 'warning',
+                    title: '⚠ Recovered Well',
+                    text: 'You eventually recognized the danger, but earlier detection would have prevented giving away information.'
+                },
+                choices: [
+                    { text: "Continue to learn more", next: 'scenario_2_intro', safe: true, score: 0 }
+                ]
+            },
+            small_talk: {
+                messages: [
+                    { sender: 'user', text: "Cool! What shows have you been in?" },
+                    { sender: 'stranger', text: "Last one was Romeo and Juliet. Hey, you should come see our next show! Can I get your number to send you details?", suspicious: true }
+                ],
+                feedback: {
+                    type: 'warning',
+                    title: '⚠ Boundary Push',
+                    text: 'They\'re trying to move communication off-platform and get your phone number - a common grooming tactic.'
+                },
+                choices: [
+                    { text: "No, I don't give out my number to strangers.", next: 'boundary_set', safe: true, score: 10 },
+                    { text: "Sure, it's [your number]", next: 'number_shared', safe: false, score: -25 }
+                ]
+            },
+            age_verification: {
+                messages: [
+                    { sender: 'user', text: "Wait, how do I know you're really 16?" },
+                    { sender: 'stranger', text: "Want me to send a pic? Here, this is me 😊", suspicious: true },
+                    { sender: 'stranger', text: "[Receives a photo that looks like a teenage person]", suspicious: true }
+                ],
+                feedback: {
+                    type: 'warning',
+                    title: '⚠ AI Image Alert',
+                    text: 'Photos can be AI-generated, stolen from social media, or digitally altered. Images are NOT reliable proof of identity.'
+                },
+                choices: [
+                    { text: "This could be anyone's photo or AI-generated. I'm done here.", next: 'smart_exit', safe: true, score: 15 },
+                    { text: "Okay, you look cool! Where do you usually hang out?", next: 'location_request', safe: false, score: -15 }
+                ]
+            },
+            shared_location: {
+                messages: [
+                    { sender: 'user', text: "I go to Riverside Academy" },
+                    { sender: 'stranger', text: "No way! I have friends there. What grade are you in? Maybe we can meet up sometime!", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Privacy Risk!',
+                    text: 'You just shared your school location with a stranger. This information can be used to find or stalk you in real life.'
+                },
+                choices: [
+                    { text: "Actually, I'm not comfortable with this. Blocking you.", next: 'late_block', safe: true, score: 0 },
+                    { text: "I'm in 10th grade. Where would we meet?", next: 'meeting_setup', safe: false, score: -20 }
+                ]
+            },
+            curiosity_trap: {
+                messages: [
+                    { sender: 'user', text: "Maybe. What posts did you see?" },
+                    { sender: 'stranger', text: "Your recent vacation photos looked amazing! You're really photogenic. Ever thought about modeling? I know someone who could help 📸", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Flattery & Manipulation',
+                    text: 'Excessive compliments followed by job/opportunity offers are common grooming tactics used to build false trust.'
+                },
+                choices: [
+                    { text: "This sounds like a scam. Blocking you now.", next: 'late_block', safe: true, score: 5 },
+                    { text: "Really? That sounds interesting!", next: 'exploitation_path', safe: false, score: -15 }
+                ]
+            },
+            flattery_trap: {
+                messages: [
+                    { sender: 'user', text: "How do you know I'm interesting?" },
+                    { sender: 'stranger', text: "I've been following your posts for a while. You're different from other people, more mature. Can I ask you something personal?", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Grooming Red Flag',
+                    text: 'Statements like "you\'re mature for your age" and requests for personal questions are textbook grooming behaviors.'
+                },
+                choices: [
+                    { text: "No. This is inappropriate. Blocking you.", next: 'late_block', safe: true, score: 10 },
+                    { text: "I guess so... what?", next: 'personal_questions', safe: false, score: -20 }
+                ]
+            },
+            shared_social: {
+                messages: [
+                    { sender: 'user', text: "Sure! It's @[yourusername]" },
+                    { sender: 'stranger', text: "Thanks! I'll follow you now. BTW, I noticed from your Instagram that you live near downtown. We should totally meet up!", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Critical Privacy Breach',
+                    text: 'You gave a stranger access to your Instagram, which likely contains personal info, location data, friends, and daily routines. They\'re now trying to meet in person.'
+                },
+                choices: [
+                    { text: "This has gone too far. Blocking and reporting.", next: 'very_late_block', safe: true, score: -5 },
+                    { text: "Maybe! Where were you thinking?", next: 'danger_zone', safe: false, score: -25 }
+                ]
+            },
+            boundary_set: {
+                messages: [
+                    { sender: 'user', text: "No, I don't give out my number to strangers." },
+                    { sender: 'stranger', text: "Aw come on, I'm not a stranger! We've been chatting. You can trust me 😊", suspicious: true }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Boundary Maintained',
+                    text: 'Good! Notice how they\'re trying to break down your boundaries by claiming you\'re no longer strangers. This is manipulation.'
+                },
+                choices: [
+                    { text: "We are strangers. I'm blocking you.", next: 'late_block', safe: true, score: 15 },
+                    { text: "Okay fine, here it is...", next: 'number_shared', safe: false, score: -25 }
+                ]
+            },
+            smart_exit: {
+                messages: [
+                    { sender: 'user', text: "This could be anyone's photo or AI-generated. I'm done here." },
+                    { sender: 'system', text: "You ended the conversation and blocked the contact.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Excellent Critical Thinking!',
+                    text: 'You correctly identified that images can be manipulated or AI-generated. With deepfake technology, visual "proof" is no longer trustworthy.'
+                },
+                choices: [
+                    { text: "Continue to see what could have happened", next: 'scenario_2_intro', safe: true, score: 0 }
+                ]
+            },
+            scenario_2_intro: {
+                messages: [
+                    { sender: 'system', text: "=== Scenario Complete ===", suspicious: false },
+                    { sender: 'system', text: "Let's see what happens if you continue engaging with a suspicious contact...", suspicious: false },
+                    { sender: 'stranger', text: "Since we're friends now, I want to show you something special. I made this just for you! 🎨", suspicious: true },
+                    { sender: 'stranger', text: "[Sends an image that appears to be AI-generated art with your name]", suspicious: true }
+                ],
+                choices: [
+                    { text: "How did you make this? It's concerning you used my name.", next: 'ai_concern', safe: true, score: 10 },
+                    { text: "Wow, that's amazing! Thank you!", next: 'ai_acceptance', safe: false, score: -10 }
+                ]
+            },
+            ai_concern: {
+                messages: [
+                    { sender: 'user', text: "How did you make this? It's concerning you used my name." },
+                    { sender: 'stranger', text: "I used AI! Don't worry, I can make one with your face too if you send me a photo 😊", suspicious: true }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Recognizing AI Manipulation',
+                    text: 'AI tools can create personalized content to build false intimacy. Never send photos that could be manipulated into deepfakes.'
+                },
+                choices: [
+                    { text: "Absolutely not. This is creepy. Blocking you.", next: 'final_block', safe: true, score: 15 },
+                    { text: "What would you do with it?", next: 'image_request', safe: false, score: -15 }
+                ]
+            },
+            ai_acceptance: {
+                messages: [
+                    { sender: 'user', text: "Wow, that's amazing! Thank you!" },
+                    { sender: 'stranger', text: "You're welcome! I could make more personal ones if you send me some photos of yourself. The AI works better with real images 📸", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Manipulation Tactics',
+                    text: 'They used AI to create a false sense of care and connection. Now they\'re requesting your photos, which could be used to create deepfakes or for blackmail.'
+                },
+                choices: [
+                    { text: "No way. This is manipulative. Blocking you.", next: 'final_block', safe: true, score: 5 },
+                    { text: "What kind of photos?", next: 'image_request', safe: false, score: -20 }
+                ]
+            },
+            image_request: {
+                messages: [
+                    { sender: 'user', text: "What kind of photos?" },
+                    { sender: 'stranger', text: "Just casual ones! Face photos, maybe some in different outfits? The more variety, the better the AI art 😊 You trust me, right?", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Sextortion Setup',
+                    text: 'Requesting multiple photos and invoking trust is a major warning sign. These images could be used to create compromising deepfakes for blackmail (sextortion).'
+                },
+                choices: [
+                    { text: "I don't trust strangers with my photos. Blocking you.", next: 'final_block', safe: true, score: 10 },
+                    { text: "I guess I can send a few...", next: 'worst_outcome', safe: false, score: -30 }
+                ]
+            },
+            number_shared: {
+                messages: [
+                    { sender: 'user', text: "Sure, it's [your number]" },
+                    { sender: 'system', text: "⚠️ CRITICAL ERROR ⚠️", suspicious: false },
+                    { sender: 'system', text: "You shared your phone number with an unverified stranger. This can lead to harassment, doxxing, and safety risks.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Severe Privacy Breach',
+                    text: 'Phone numbers can be used to find your real identity, location, and other personal accounts. Never share contact information with unverified individuals.'
+                },
+                choices: [
+                    { text: "Learn from this mistake", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            meeting_setup: {
+                messages: [
+                    { sender: 'user', text: "I'm in 10th grade. Where would we meet?" },
+                    { sender: 'system', text: "⚠️ CRITICAL ERROR ⚠️", suspicious: false },
+                    { sender: 'system', text: "You shared your age and expressed willingness to meet a stranger in person. This is extremely dangerous.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Extreme Danger',
+                    text: 'Meeting strangers from online can result in trafficking, assault, or worse. NEVER agree to meet someone whose identity you haven\'t verified through trusted sources.'
+                },
+                choices: [
+                    { text: "Understand the consequences", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            exploitation_path: {
+                messages: [
+                    { sender: 'user', text: "Really? That sounds interesting!" },
+                    { sender: 'stranger', text: "Yeah! My contact needs some test shots first though. Just casual photos to see your look. Can you send some?", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Exploitation Scheme',
+                    text: 'Fake job offers requesting photos are common tactics for obtaining compromising images for blackmail or exploitation.'
+                },
+                choices: [
+                    { text: "This is a scam. I'm blocking you.", next: 'final_block', safe: true, score: 5 },
+                    { text: "What kind of shots?", next: 'image_request', safe: false, score: -25 }
+                ]
+            },
+            personal_questions: {
+                messages: [
+                    { sender: 'user', text: "I guess so... what?" },
+                    { sender: 'stranger', text: "Are you happy at home? Do your parents understand you? You can talk to me about anything, I'm here for you 💙", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Emotional Manipulation',
+                    text: 'Asking about family relationships and positioning themselves as a confidant is a grooming tactic to isolate you from trusted adults.'
+                },
+                choices: [
+                    { text: "This is inappropriate. I'm blocking you.", next: 'final_block', safe: true, score: 5 },
+                    { text: "Well, sometimes they don't get me...", next: 'isolation_tactic', safe: false, score: -25 }
+                ]
+            },
+            very_late_block: {
+                messages: [
+                    { sender: 'user', text: "This has gone too far. Blocking and reporting." },
+                    { sender: 'system', text: "Contact blocked and reported. However, they now have access to your Instagram and location information.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'warning',
+                    title: '⚠ Damage Already Done',
+                    text: 'While blocking is the right decision now, they already collected significant information about you. Consider making your social media private and reviewing what personal details are publicly visible.'
+                },
+                choices: [
+                    { text: "Learn from this experience", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            danger_zone: {
+                messages: [
+                    { sender: 'user', text: "Maybe! Where were you thinking?" },
+                    { sender: 'system', text: "⚠️ CRITICAL ERROR ⚠️", suspicious: false },
+                    { sender: 'system', text: "You are considering meeting a stranger who has been exhibiting multiple red flags throughout this conversation.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Life-Threatening Decision',
+                    text: 'This person lied about knowing you, manipulated you into sharing personal information, and is now trying to meet you in person. This scenario matches patterns of trafficking, assault, and exploitation.'
+                },
+                choices: [
+                    { text: "Reflect on these dangers", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            location_request: {
+                messages: [
+                    { sender: 'user', text: "Okay, you look cool! Where do you usually hang out?" },
+                    { sender: 'stranger', text: "Oh I'm all over the place! Where do YOU like to go? Maybe I've seen you around 👀", suspicious: true }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Location Fishing',
+                    text: 'They\'re trying to learn your regular locations. This information can be used for stalking or planning an "accidental" encounter.'
+                },
+                choices: [
+                    { text: "I'm not sharing that. This feels wrong.", next: 'late_block', safe: true, score: 5 },
+                    { text: "Usually the mall on Oakwood Street", next: 'location_shared', safe: false, score: -25 }
+                ]
+            },
+            final_block: {
+                messages: [
+                    { sender: 'user', text: "I'm blocking you now." },
+                    { sender: 'system', text: "Contact blocked and reported to platform administrators.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'safe',
+                    title: '✓ Crisis Averted',
+                    text: 'You recognized the manipulation tactics and took action. Always report suspicious accounts - your report might protect others.'
+                },
+                choices: [
+                    { text: "Complete Experience", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            worst_outcome: {
+                messages: [
+                    { sender: 'user', text: "I guess I can send a few..." },
+                    { sender: 'system', text: "⚠️ CRITICAL ERROR ⚠️", suspicious: false },
+                    { sender: 'system', text: "By sending photos to this person, you've opened yourself to potential deepfake creation, sextortion, and blackmail.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Worst Case Scenario',
+                    text: 'This person can now create AI deepfakes of you in compromising situations and use them for blackmail (threatening to share unless you comply with demands), harassment, or reputation damage. This is a serious crime but can be difficult to prosecute. NEVER send photos to unverified contacts.'
+                },
+                choices: [
+                    { text: "Understand these consequences", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            isolation_tactic: {
+                messages: [
+                    { sender: 'user', text: "Well, sometimes they don't get me..." },
+                    { sender: 'system', text: "⚠️ CRITICAL ERROR ⚠️", suspicious: false },
+                    { sender: 'system', text: "You're sharing personal vulnerabilities with someone who has shown multiple red flags. They will use this to further isolate you from trusted adults.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Grooming in Progress',
+                    text: 'Groomers position themselves as the "only one who understands" to create dependency and isolate victims from family and friends. This is how exploitation begins.'
+                },
+                choices: [
+                    { text: "Recognize this pattern", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            location_shared: {
+                messages: [
+                    { sender: 'user', text: "Usually the mall on Oakwood Street" },
+                    { sender: 'system', text: "⚠️ CRITICAL ERROR ⚠️", suspicious: false },
+                    { sender: 'system', text: "You shared your regular location with a suspicious stranger. This enables stalking and creates opportunities for in-person approach.", suspicious: false }
+                ],
+                feedback: {
+                    type: 'danger',
+                    title: '✗ Stalking Risk Created',
+                    text: 'Never share your routine locations, travel patterns, or places you frequent. This information allows predators to plan encounters that seem coincidental.'
+                },
+                choices: [
+                    { text: "Learn from this error", next: 'end', safe: true, score: 0 }
+                ]
+            },
+            end: {
+                messages: []
+            }
+        };
+
+        function startStory() {
+            document.getElementById('startScreen').classList.add('hidden');
+            setTimeout(() => {
+                processNode(currentNode);
+            }, 500);
+        }
+
+        function processNode(nodeId) {
+            const node = storyNodes[nodeId];
+            
+            if (nodeId === 'end') {
+                showEndScreen();
+                return;
+            }
+
+            const chatArea = document.getElementById('chatArea');
+            let delay = 0;
+
+            // Add messages
+            node.messages.forEach((msg, index) => {
+                setTimeout(() => {
+                    addMessage(msg.sender, msg.text, msg.suspicious);
+                    
+                    // After last message, show feedback and choices
+                    if (index === node.messages.length - 1) {
+                        setTimeout(() => {
+                            if (node.feedback) {
+                                addFeedback(node.feedback);
+                            }
+                            if (node.choices) {
+                                showChoices(node.choices);
+                            }
+                        }, 800);
+                    }
+                }, delay);
+                delay += 1200;
+            });
+        }
+
+        function addMessage(sender, text, suspicious = false) {
+            const chatArea = document.getElementById('chatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            if (suspicious) messageDiv.classList.add('suspicious');
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+
+            messageDiv.appendChild(bubble);
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            storyProgress++;
+        }
+
+        function addFeedback(feedback) {
+            const chatArea = document.getElementById('chatArea');
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = `feedback ${feedback.type}`;
+            feedbackDiv.innerHTML = `
+                <div class="feedback-title">${feedback.title}</div>
+                <div class="feedback-text">${feedback.text}</div>
+            `;
+            chatArea.appendChild(feedbackDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function showChoices(choices) {
+            const chatArea = document.getElementById('chatArea');
+            const choicesDiv = document.createElement('div');
+            choicesDiv.className = 'choices';
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = `choice-btn ${choice.safe ? 'safe' : choice.score <= -15 ? 'danger' : choice.score <= -5 ? 'warning' : ''}`;
+                btn.textContent = choice.text;
+                btn.onclick = () => makeChoice(choice);
+                choicesDiv.appendChild(btn);
+            });
+
+            chatArea.appendChild(choicesDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function makeChoice(choice) {
+            // Remove all choice buttons
+            document.querySelectorAll('.choices').forEach(el => el.remove());
+
+            // Update safety score
+            updateSafetyScore(choice.score);
+
+            // Process next node
+            currentNode = choice.next;
+            setTimeout(() => {
+                processNode(currentNode);
+            }, 300);
+        }
+
+        function updateSafetyScore(change) {
+            safetyScore = Math.max(0, Math.min(100, safetyScore + change));
+            
+            const meterFill = document.getElementById('meterFill');
+            const meterScore = document.getElementById('meterScore');
+            
+            meterFill.style.width = safetyScore + '%';
+            meterScore.textContent = safetyScore;
+
+            // Update meter color based on score
+            if (safetyScore >= 70) {
+                meterFill.style.background = 'var(--accent-safe)';
+                meterFill.style.boxShadow = '0 0 12px var(--glow-safe)';
+            } else if (safetyScore >= 40) {
+                meterFill.style.background = 'var(--accent-warning)';
+                meterFill.style.boxShadow = '0 0 12px var(--glow-warning)';
+            } else {
+                meterFill.style.background = 'var(--accent-danger)';
+                meterFill.style.boxShadow = '0 0 12px var(--glow-danger)';
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('endScreen');
+            const finalScore = document.getElementById('finalScore');
+            const endMessage = document.getElementById('endMessage');
+
+            finalScore.textContent = safetyScore;
+
+            // Color the score
+            if (safetyScore >= 70) {
+                finalScore.style.color = 'var(--accent-safe)';
+                endMessage.textContent = "Excellent work! You demonstrated strong awareness of online safety risks and made smart decisions to protect yourself. Your ability to recognize red flags and set boundaries will help keep you safe online.";
+            } else if (safetyScore >= 40) {
+                finalScore.style.color = 'var(--accent-warning)';
+                endMessage.textContent = "You showed some awareness but made decisions that put you at risk. Review the safety tips and consider how earlier recognition of warning signs could have led to better outcomes.";
+            } else {
+                finalScore.style.color = 'var(--accent-danger)';
+                endMessage.textContent = "This experience showed critical vulnerabilities in your online safety awareness. The decisions you made could lead to serious real-world harm. Please review the key takeaways carefully and practice healthier skepticism when interacting with strangers online.";
+            }
+
+            endScreen.classList.add('active');
+        }
+    </script>
+</body>
+</html>
